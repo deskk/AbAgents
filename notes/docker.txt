@@ -1,0 +1,62 @@
+1. write Dockerfile
+2. Build the Docker Image
+In your terminal, navigate to your project directory and run:
+
+docker build -t antibody_app .
+
+Explanation:
+
+docker build: Command to build a Docker image.
+
+-t antibody_app: Tags the image with the name antibody_app.
+
+.: Specifies the build context (current directory).
+
+3. Run the Docker Container
+You'll need to pass the OpenAI API key to the container as an environment variable.
+
+docker run -it --rm \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  antibody_app
+
+Explanation:
+
+-it: Runs the container in interactive mode with a TTY.
+
+--rm: Automatically removes the container when it exits.
+
+-e OPENAI_API_KEY=...: Sets the OPENAI_API_KEY environment variable inside the container.
+
+antibody_app: The name of the image to run.
+
+Mounting Volumes (Optional)
+If you want to access or persist data outside the container:
+
+docker run -it --rm \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  -v $(pwd)/data:/app/data \
+  antibody_app
+
+-v $(pwd)/data:/app/data: Mounts the data directory from your host into the container.
+
+4. Test and Debug
+When the container runs, your application should start and prompt for user input.
+
+Enter your antibody design request as usual.
+
+Debugging Inside the Container
+If you encounter issues, you can start a shell inside the container:
+
+bash
+Copy code
+docker run -it --rm \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  --entrypoint /bin/bash \
+  antibody_app
+This allows you to:
+
+Inspect files and directories.
+
+Run Python scripts manually.
+
+Install additional packages if needed.

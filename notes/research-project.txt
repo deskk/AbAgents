@@ -1,0 +1,43 @@
+Project Overview
+Title: Immunology Drug Discovery Using a Multi-Agent LLM Framework
+
+Objective: Develop a computational pipeline that combines LLM agents with deep learning models to facilitate antibody drug discovery.
+
+Key Components:
+
+LLM Agents:
+
+Planner Agent: Creates and adjusts plans based on objectives and feedback.
+Coder Agent: Generates code to execute tasks such as data retrieval and model execution.
+Critic Agent: Reviews plans and code for accuracy and efficacy.
+Assistant Agent: Executes functions and integrates outputs from various models.
+Deep Learning Models:
+
+Antibody Design Model: Generates initial antibody sequences targeting specific antigens.
+Optimization Model: Refines antibody sequences to enhance desired properties.
+Analysis Model: Predicts properties to assess candidate viability.
+RAG with llama_index:
+
+Integrates domain-specific knowledge into the LLM framework for informed decision-making.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Role of Structure Prediction, Molecular Simulation, and Docking in Antibody Drug Discovery
+a. Structure Prediction (e.g., AlphaFold)
+Purpose:
+
+3D Structure Determination: Predicts the three-dimensional structure of antibody sequences.
+Understanding Binding Sites: Helps identify the antigen-binding regions and potential conformational changes.
+Guiding Optimization: Provides structural insights that can inform sequence modifications to improve binding affinity and specificity.
+b. Molecular Simulation
+Purpose:
+
+Dynamic Behavior Analysis: Simulates the movement and flexibility of antibodies and antigens over time.
+Stability Assessment: Evaluates the thermal and structural stability of antibody candidates.
+Interaction Insights: Provides detailed information on intermolecular interactions, such as hydrogen bonds and hydrophobic contacts.
+c. Docking Simulation
+Purpose:
+
+Predicting Binding Modes: Estimates how an antibody binds to its target antigen.
+Affinity Estimation: Assesses the strength of the antibody-antigen interaction.
+Identifying Key Residues: Highlights critical amino acids involved in binding, which can be targets for optimization.

@@ -1,0 +1,7 @@
+your_project/
+├── agents.py
+├── agent_functions.py
+├── llm_config.py
+├── data/
+│   └── antibody_antigen_models/
+│       └── (Your indexed data files)

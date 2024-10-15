@@ -1,0 +1,23 @@
+optimization & analysis deep learning model selection criteria:
+
+Compatibility with Antibody Sequences:
+
+The model must accept antibody sequences as input and be capable of processing variable regions specific to antibodies.
+Predictive Accuracy:
+
+Models should have a proven track record with high accuracy in predicting or optimizing the desired properties.
+Integration Ease:
+
+Should be implementable within your existing Python-based framework and callable from agent_functions.py.
+Open Source or Accessible APIs:
+
+Prefer models that are open-source or have well-documented APIs for integration.
+Computational Efficiency:
+
+Models should run efficiently on available hardware (CPU/GPU) without requiring excessive computational resources.
+Active Community and Support:
+
+Models with active development communities can provide support and updates, ensuring longevity and reliability.
+Documentation and Usability:
+
+Comprehensive documentation aids in smoother integration and troubleshooting.
