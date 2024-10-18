@@ -14,24 +14,24 @@ openai.api_key = openai_api_key
 # LLM configurations
 llm_config = {
     "functions": [
-        {
-            "name": "design_antibody",
-            "description": "Designs an antibody sequence targeting a specific antigen.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "antigen_name": {
-                        "type": "string",
-                        "description": "Name of the antigen."
-                    },
-                    "requirements": {
-                        "type": "string",
-                        "description": "Specific requirements for the antibody, such as high affinity or low immunogenicity."
-                    }
-                },
-                "required": ["antigen_name"]
-            }
-        },
+        # {
+        #     "name": "design_antibody",
+        #     "description": "Designs an antibody sequence targeting a specific antigen.",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "antigen_name": {
+        #                 "type": "string",
+        #                 "description": "Name of the antigen."
+        #             },
+        #             "requirements": {
+        #                 "type": "string",
+        #                 "description": "Specific requirements for the antibody, such as high affinity or low immunogenicity."
+        #             }
+        #         },
+        #         "required": ["antigen_name"]
+        #     }
+        # },
         {
             "name": "optimize_antibody",
             "description": "Optimizes an antibody sequence for desired properties.",
@@ -68,12 +68,12 @@ llm_config = {
     ],
     "openai_params": {
         "temperature": 0.7,
-        "max_tokens": 1500,
+        "max_tokens": 1500, # be mindful of this, as it can be expensive
         "n": 1,
         "stop": None,
     },
     "config_list": [
-        {"model": "gpt-4-turbo", "api_key": openai_api_key},
+        {"model": "gpt-3.5-turbo", "api_key": openai_api_key},
         # You can add more model configurations if needed
     ],
 }

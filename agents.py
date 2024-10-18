@@ -69,16 +69,19 @@ executor = UserProxyAgent(
     llm_config=llm_config,
 )
 
-# Define the Planner Agent
+'''
+Planner agent is responsible for developing a plan for antibody design.
+'''
 planner = AssistantAgent(
     name="Planner",
     system_message=(
         "Planner. You develop a plan. Begin by explaining the plan. Revise the plan based on feedback from the critic and user_proxy, until user_proxy approval. "
-        "The plan may involve calling custom functions for retrieving knowledge, designing antibodies, and computing and analyzing antibody properties. "
-        "Include the function names in the plan and the necessary parameters."
+        "The plan may involve calling custom functions for retrieving knowledge, designing antibodies using 'generate_antibody_sequence_palm_h3', and computing and analyzing antibody properties. "
+        "Include the function names in the plan and the necessary parameters, such as 'antigen_sequence', 'heavy_chain_sequence', 'light_chain_sequence', 'cdrh3_begin', 'cdrh3_end', and any 'requirements'."
     ),
     llm_config=llm_config,
 )
+
 
 # Define the RetrieveUserProxyAgent (for RAG)
 ragproxyagent = RetrieveUserProxyAgent(
@@ -111,7 +114,7 @@ assistant = AssistantAgent(
     function_map={
         "retrieve_antigen_data": func.retrieve_antigen_data,
         # "design_antibody": func.design_antibody,
-        "generate_antibody_sequences": func.generate_antibody_sequence,
+        "generate_antibody_sequence_palm_h3": func.generate_antibody_sequence_palm_h3,  # Updated function
         "optimize_antibody": func.optimize_antibody,
         "analyze_antibody_properties": func.analyze_antibody_properties,
         # Add more function mappings as needed
