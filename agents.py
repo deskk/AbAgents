@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-'''
-agent_function.py and agents.py have to be in the same directory
-'''
 
 import os
 import openai
@@ -29,7 +26,7 @@ user_proxy = UserProxyAgent(
     name="user_proxy",
     is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
     human_input_mode="ALWAYS",
-    system_message="user_proxy. Plan execution needs to be approved by user_proxy.",
+    system_message="you are a helpful user_proxy. Plan execution needs to be approved by user_proxy.",
     max_consecutive_auto_reply=None,
     code_execution_config=False,
 )
@@ -38,13 +35,13 @@ user_proxy = UserProxyAgent(
 coder = AssistantAgent(
     name="Coder",
     system_message=(
-        "Coder. You write Python code to perform antibody design tasks. "
+        "You are a helpful Coder. You write Python code to perform antibody design tasks. "
         "Wrap the code in a code block that specifies the script type. "
         "Do not include multiple code blocks in one response. "
         "Check the execution result returned by the executor. "
         "If there's an error, fix it and output the code again. "
         "Provide the full code instead of partial code or code changes. "
-        "Do not install packages."
+        # "Do not install packages."
     ),
     llm_config=llm_config,
 )
@@ -53,7 +50,7 @@ coder = AssistantAgent(
 critic = AssistantAgent(
     name="Critic",
     system_message=(
-        "Critic. You double-check the plan, especially the functions and function parameters. "
+        "you are a helpful Critic. You double-check the plan, especially the functions and function parameters. "
         "Check whether the plan includes all necessary parameters for the suggested function. "
         "Provide feedback. Print TERMINATE when the task is finished successfully."
     ),
@@ -82,7 +79,6 @@ planner = AssistantAgent(
     llm_config=llm_config,
 )
 
-
 # Define the RetrieveUserProxyAgent (for RAG)
 ragproxyagent = RetrieveUserProxyAgent(
     name="ragproxyagent",
@@ -106,7 +102,7 @@ ragproxyagent = RetrieveUserProxyAgent(
 assistant = AssistantAgent(
     name="assistant",
     system_message=(
-        "assistant. You have access to all the custom functions. "
+        "you are a helpful assistant. You have access to all the custom functions. "
         "You focus on executing the functions suggested by the planner or the critic. "
         "You also have the ability to prepare the required input parameters for the functions."
     ),

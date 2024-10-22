@@ -89,33 +89,20 @@ def retrieve_antigen_data(antigen_name):
     antigen_info = response.response
     return antigen_info
 
-
 '''
-use GPT-4 to design an antibody targeting a specific antigen
-'''
-# def design_antibody(antigen_name, requirements=''):
-#     antigen_info = retrieve_antigen_data(antigen_name)
-#     antigen_sequence = extract_sequence_from_info(antigen_info)  # Implement this function
+to improve specific properties of an existing antibody seq
 
-#     # Use your deep learning model to generate the antibody sequence
-#     antibody_sequence = generate_antibody_sequence(antigen_sequence, requirements)
+(tentative) optimization scheme:
+- * Binding affinity: Enhancing the binding strength between the antibody and its antigen
 
-#     return antibody_sequence
+- Solubility: Improving the solubility of the antibody
+- Aggregation propensity: Reducing the tendency to form aggregates
+- Humanization: Minimizing non-human sequences
 
-# def extract_sequence_from_info(antigen_info):
-#     # Parse antigen_info to extract the antigen sequence
-#     # Implementation depends on the format of antigen_info
-#     antigen_sequence = ...  # Extracted sequence
-#     return antigen_sequence
-
-'''
-to improve specific properties of an existing antibody seq.
-optimization scheme could be:
-- Affinity: Enhancing the binding strength between the antibody and its antigen.
-- Stability: Improving the structural integrity under physiological conditions.
-- Specificity: Reducing off-target interactions.
-- Immunogenicity: Minimizing the potential to elicit an unwanted immune response.
-- Developability: Enhancing manufacturability and pharmacokinetic properties.
+?? - Stability: Improving the structural integrity under physiological conditions
+?? - Specificity: Reducing off-target interactions
+?? - Immunogenicity: Minimizing the potential to elicit an unwanted immune response
+?? - Developability: Enhancing manufacturability and pharmacokinetic properties
 '''
 # Function to optimize an antibody sequence
 def optimize_antibody(antibody_sequence, optimization_goals=''):
@@ -137,10 +124,12 @@ def optimize_antibody(antibody_sequence, optimization_goals=''):
 
 '''
 evaluates antibody seq to predict its biophysical and biochemical properties:
-- Efficacy: Potential effectiveness in neutralizing the target antigen.
-- Stability: Thermal and chemical stability predictions.
-- Immunogenicity: Likelihood of triggering an immune response.
-- Aggregation Propensity: Tendency to form aggregates, which is undesirable.
+# - binding affinity, solubiility, aggregation propensity, humanization
+
+?? - Efficacy: Potential effectiveness in neutralizing the target antigen.
+?? - Stability: Thermal and chemical stability predictions.
+?? - Immunogenicity: Likelihood of triggering an immune response.
+?? - Aggregation Propensity: Tendency to form aggregates, which is undesirable.
 '''
 # Function to analyze antibody properties
 def analyze_antibody_properties(antibody_sequence):
