@@ -41,3 +41,12 @@ Purpose:
 Predicting Binding Modes: Estimates how an antibody binds to its target antigen.
 Affinity Estimation: Assesses the strength of the antibody-antigen interaction.
 Identifying Key Residues: Highlights critical amino acids involved in binding, which can be targets for optimization.
+
+-------------------------------------------------
+
+Overview:
+
+agents.py: Orchestrates the workflow between various agents
+agent_functions.py: Contains custom functions that the assistant agent can execute
+llm_config.py: Configures the language models and their parameters
+abgen.py: Script for generating antibody sequences using the PALM-H3 model

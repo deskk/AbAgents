@@ -10,58 +10,59 @@ from llm_config import llm_config
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 '''
-placeholder for integrating existing antibody models
+generative model for antibody design conditioned on antigen
 '''
-
-# def generate_antibody_sequence(antigen_sequence, requirements=''):
-#     """
-#     Generates an antibody sequence targeting the given antigen.
-
-#     Args:
-#         antigen_sequence (str): The amino acid sequence of the antigen.
-#         requirements (str): Additional requirements or constraints for the antibody design.
-
-#     Returns:
-#         str: The generated antibody sequence.
-#     """
-#     # Prepare input data for the model
-#     input_data = {
-#         'antigen_sequence': antigen_sequence,
-#         'requirements': requirements,
-#     }
-
-#     # Generate the antibody sequence using the model
-#     # Replace the following line with your model's generation code
-#     # antibody_sequence = model.generate_antibody(input_data)
-
-#     # For illustration, we'll use a placeholder
-#     antibody_sequence = model.generate_antibody(input_data)
-#     return antibody_sequence
-
 # Load the PALM-H3 model and tokenizer
-def load_palm_h3_model(model_dir):
-    tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_dir, trust_remote_code=True)
-    model.to('cuda' if torch.cuda.is_available() else 'cpu')
-    return model, tokenizer
+def load_palm_h3_model(model_dir, antibody_tokenizer_dir, antigen_tokenizer_dir):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
 
-def generate_antibody_sequence_palm_h3(antigen_sequence, heavy_chain_sequence, light_chain_sequence, cdrh3_begin, cdrh3_end, requirements=''):
-    # Load the model and tokenizer if not already loaded
-    if not hasattr(generate_antibody_sequence_palm_h3, 'model'):
-        model_dir = '/path/to/your/palm_h3_model'  # Replace with actual path
-        generate_antibody_sequence_palm_h3.model, generate_antibody_sequence_palm_h3.tokenizer = load_palm_h3_model(model_dir)
+    # Load tokenizers
+    antibody_tokenizer = AutoTokenizer.from_pretrained(antibody_tokenizer_dir)
+    antigen_tokenizer = AutoTokenizer.from_pretrained(antigen_tokenizer_dir)
 
-    model = generate_antibody_sequence_palm_h3.model
-    tokenizer = generate_antibody_sequence_palm_h3.tokenizer
+    # Load model
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_dir)
+    model.to(device)
 
-    # Prepare input text
-    input_text = f"{antigen_sequence} [SEP] {heavy_chain_sequence} [SEP] {light_chain_sequence} [SEP] {cdrh3_begin} [SEP] {cdrh3_end} [SEP] {requirements}"
+    return model, antibody_tokenizer, antigen_tokenizer
 
-    # Tokenize and generate
-    input_ids = tokenizer.encode(input_text, return_tensors='pt').to(model.device)
 
+## model & tokenizer loading requires separate tokenizers, so gotta download the models
+## input preparation, can we use LLM for this?
+def generate_antibody_sequence_palm_h3(
+    antigen_sequence,
+    heavy_chain_sequence,
+    light_chain_sequence,
+    cdrh3_begin,
+    cdrh3_end,
+    model=None,
+    antibody_tokenizer=None,
+    antigen_tokenizer=None
+):
+    if model is None or antibody_tokenizer is None or antigen_tokenizer is None:
+        raise ValueError("Model and tokenizers must be provided.")
+
+    device = next(model.parameters()).device
+
+    # Tokenize sequences
+    antigen_ids = antigen_tokenizer.encode(antigen_sequence, add_special_tokens=False)
+    heavy_ids = antibody_tokenizer.encode(heavy_chain_sequence, add_special_tokens=False)
+    light_ids = antibody_tokenizer.encode(light_chain_sequence, add_special_tokens=False)
+
+    # Prepare input IDs and attention masks
+    inputs = {
+        'input_ids': torch.tensor([heavy_ids], device=device),
+        'attention_mask': torch.ones((1, len(heavy_ids)), device=device),
+        'decoder_input_ids': torch.tensor([light_ids], device=device),
+        'antigen_input_ids': torch.tensor([antigen_ids], device=device),
+        'cdrh3_begin': torch.tensor([cdrh3_begin], device=device),
+        'cdrh3_end': torch.tensor([cdrh3_end], device=device),
+    }
+
+    # Generate the antibody sequence
     outputs = model.generate(
-        input_ids=input_ids,
+        **inputs,
         max_length=128,
         num_return_sequences=1,
         do_sample=True,
@@ -71,7 +72,7 @@ def generate_antibody_sequence_palm_h3(antigen_sequence, heavy_chain_sequence, l
     )
 
     # Decode output
-    generated_sequence = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    generated_sequence = antibody_tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     return generated_sequence
 
@@ -135,7 +136,7 @@ evaluates antibody seq to predict its biophysical and biochemical properties:
 def analyze_antibody_properties(antibody_sequence):
     prompt = (
         f"Analyze the following antibody sequence:\n{antibody_sequence}\n\n"
-        f"Provide a detailed analysis of its properties, including potential efficacy, stability, and immunogenicity."
+        f"Provide a detailed analysis of its properties, including binding affinity, solubility, aggregation propensity, and humanization."
     )
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -147,16 +148,3 @@ def analyze_antibody_properties(antibody_sequence):
     )
     analysis = response['choices'][0]['message']['content']
     return analysis
-
-############################################
-# # Function to integrate existing antibody-antigen models
-# def run_antibody_design_model(antigen_info, requirements):
-#     # Placeholder for integrating existing models
-#     # This could involve calling external software or scripts
-#     # For now, we'll simulate with a simple message
-#     print("Integrating existing antibody-antigen models...")
-#     # Simulate model output
-#     antibody_sequence = "QVQLVQSGAEVKKPGASVKVSCKASG... (antibody sequence)"
-#     return antibody_sequence
-
-# You can add more functions as needed for your project

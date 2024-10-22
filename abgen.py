@@ -4,7 +4,7 @@
 """
 abgen.py
 
-Script for generating antibody sequences using the PALM-H3 model.
+Script for generating antibody sequences using the PALM-H3 model
 """
 
 import os

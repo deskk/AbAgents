@@ -68,7 +68,9 @@ llm_config = {
     ],
     "openai_params": {
         "temperature": 0.7,
-        "max_tokens": 1500, # be mindful of this, as it can be expensive
+
+        ## be mindful of this parameter to control cost
+        "max_tokens": 1500,
         "n": 1,
         "stop": None,
     },

@@ -109,8 +109,10 @@ assistant = AssistantAgent(
     llm_config=llm_config,
     function_map={
         "retrieve_antigen_data": func.retrieve_antigen_data,
-        # "design_antibody": func.design_antibody,
+        
+        ## might not work properly, need to match function definitions in agent_functions.py and correctly handle the required parameters and model loading
         "generate_antibody_sequence_palm_h3": func.generate_antibody_sequence_palm_h3,  # Updated function
+        
         "optimize_antibody": func.optimize_antibody,
         "analyze_antibody_properties": func.analyze_antibody_properties,
         # Add more function mappings as needed
@@ -131,7 +133,8 @@ class Coordinator:
         self.assistant = assistant
         self.ragproxyagent = ragproxyagent
     
-    # Q: does 'chat' between agents work?
+    ## need to verify the chat methods of the agents correctly handle message passing
+    ## test the chat method for each agent individually to ensure it works as expected, add error handling if necessary
     def run(self):
         # Step 1: Get user input
         user_input = self.user_proxy.get_user_input()
