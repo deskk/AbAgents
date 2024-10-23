@@ -27,21 +27,20 @@ def load_palm_h3_model(model_dir, antibody_tokenizer_dir, antigen_tokenizer_dir)
 
     return model, antibody_tokenizer, antigen_tokenizer
 
+def generate_antibody_sequence_palm_h3(antigen_sequence, heavy_chain_sequence, light_chain_sequence, cdrh3_begin, cdrh3_end):
+    # Load the model and tokenizers if not already loaded
+    if not hasattr(generate_antibody_sequence_palm_h3, 'model'):
+        base_dir = 'palm-model/Model_Zenodo'
+        model_dir = os.path.join(base_dir, 'PALM_seq2seq')
+        antibody_tokenizer_dir = os.path.join(base_dir, 'Heavy_roformer')
+        antigen_tokenizer_dir = os.path.join(base_dir, 'antigenmodel')
+        generate_antibody_sequence_palm_h3.model, generate_antibody_sequence_palm_h3.antibody_tokenizer, generate_antibody_sequence_palm_h3.antigen_tokenizer = load_palm_h3_model(
+            model_dir, antibody_tokenizer_dir, antigen_tokenizer_dir
+        )
 
-## model & tokenizer loading requires separate tokenizers, so gotta download the models
-## input preparation, can we use LLM for this?
-def generate_antibody_sequence_palm_h3(
-    antigen_sequence,
-    heavy_chain_sequence,
-    light_chain_sequence,
-    cdrh3_begin,
-    cdrh3_end,
-    model=None,
-    antibody_tokenizer=None,
-    antigen_tokenizer=None
-):
-    if model is None or antibody_tokenizer is None or antigen_tokenizer is None:
-        raise ValueError("Model and tokenizers must be provided.")
+    model = generate_antibody_sequence_palm_h3.model
+    antibody_tokenizer = generate_antibody_sequence_palm_h3.antibody_tokenizer
+    antigen_tokenizer = generate_antibody_sequence_palm_h3.antigen_tokenizer
 
     device = next(model.parameters()).device
 
@@ -50,20 +49,24 @@ def generate_antibody_sequence_palm_h3(
     heavy_ids = antibody_tokenizer.encode(heavy_chain_sequence, add_special_tokens=False)
     light_ids = antibody_tokenizer.encode(light_chain_sequence, add_special_tokens=False)
 
+    # Convert CDR H3 indices to tensors
+    cdrh3_begin_tensor = torch.tensor([cdrh3_begin], device=device)
+    cdrh3_end_tensor = torch.tensor([cdrh3_end], device=device)
+
     # Prepare input IDs and attention masks
     inputs = {
         'input_ids': torch.tensor([heavy_ids], device=device),
         'attention_mask': torch.ones((1, len(heavy_ids)), device=device),
         'decoder_input_ids': torch.tensor([light_ids], device=device),
         'antigen_input_ids': torch.tensor([antigen_ids], device=device),
-        'cdrh3_begin': torch.tensor([cdrh3_begin], device=device),
-        'cdrh3_end': torch.tensor([cdrh3_end], device=device),
+        'cdr3_start': cdrh3_begin_tensor,
+        'cdr3_end': cdrh3_end_tensor,
     }
 
     # Generate the antibody sequence
     outputs = model.generate(
         **inputs,
-        max_length=128,
+        max_length=512,
         num_return_sequences=1,
         do_sample=True,
         top_k=50,
@@ -113,7 +116,7 @@ def optimize_antibody(antibody_sequence, optimization_goals=''):
         f"Provide the optimized antibody sequence and explain the modifications."
     )
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are an expert in antibody optimization."},
             {"role": "user", "content": prompt}
@@ -139,7 +142,7 @@ def analyze_antibody_properties(antibody_sequence):
         f"Provide a detailed analysis of its properties, including binding affinity, solubility, aggregation propensity, and humanization."
     )
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are an expert in antibody analysis."},
             {"role": "user", "content": prompt}

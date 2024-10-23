@@ -75,7 +75,7 @@ llm_config = {
         "stop": None,
     },
     "config_list": [
-        {"model": "gpt-3.5-turbo", "api_key": openai_api_key},
+        {"model": "gpt-4o-mini", "api_key": openai_api_key},
         # You can add more model configurations if needed
     ],
 }

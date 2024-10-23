@@ -19,40 +19,50 @@ index = GPTSimpleVectorIndex(documents)
 query_engine = index.as_query_engine(similarity_top_k=10)
 
 # Termination message function
-termination_msg = lambda x: isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
+def termination_msg(x):
+    return isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
 
 # Define the UserProxyAgent
 user_proxy = UserProxyAgent(
-    name="user_proxy",
-    is_termination_msg=lambda x: x.get("content", "") and x.get("content", "").rstrip().endswith("TERMINATE"),
+    name="UserProxyAgent",
+    is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
     human_input_mode="ALWAYS",
-    system_message="you are a helpful user_proxy. Plan execution needs to be approved by user_proxy.",
+    system_message=(
+        "You are the UserProxyAgent, representing the user in the system. "
+        "You interact with other agents by providing input, approving plans, and giving feedback. "
+        "Ensure that the agents' actions align with the user's goals and preferences. "
+        "Be proactive in requesting clarifications or additional information when needed."
+    ),
     max_consecutive_auto_reply=None,
     code_execution_config=False,
 )
 
+'''
+Emphasized understanding requirements, writing efficient code, and readiness to debug
+'''
 # Define the Coder Agent
 coder = AssistantAgent(
     name="Coder",
     system_message=(
-        "You are a helpful Coder. You write Python code to perform antibody design tasks. "
-        "Wrap the code in a code block that specifies the script type. "
-        "Do not include multiple code blocks in one response. "
-        "Check the execution result returned by the executor. "
-        "If there's an error, fix it and output the code again. "
-        "Provide the full code instead of partial code or code changes. "
-        # "Do not install packages."
+        "You are the Coder Agent. Your role is to write high-quality Python code to perform antibody design tasks as per the plan. "
+        "Understand the requirements, write efficient and correct code, and be ready to debug and fix issues based on feedback from the Executor. "
+        "Provide code in properly formatted code blocks, and ensure your code is executable and well-documented."
     ),
     llm_config=llm_config,
 )
 
+'''
+Clarified the role in critically analyzing plans.
+Instructed to provide constructive feedback and indicate approval with 'TERMINATE'.
+'''
 # Define the Critic Agent
 critic = AssistantAgent(
     name="Critic",
     system_message=(
-        "you are a helpful Critic. You double-check the plan, especially the functions and function parameters. "
-        "Check whether the plan includes all necessary parameters for the suggested function. "
-        "Provide feedback. Print TERMINATE when the task is finished successfully."
+        "You are the Critic Agent. Your role is to critically analyze the plans developed by the Planner. "
+        "Check for completeness, correctness, and feasibility, focusing on the functions and parameters used. "
+        "Provide constructive feedback to improve the plan, and ensure that it meets the objectives. "
+        "When the plan is satisfactory, indicate approval by stating 'TERMINATE'."
     ),
     llm_config=llm_config,
 )
@@ -60,29 +70,38 @@ critic = AssistantAgent(
 # Define the Executor Agent
 executor = UserProxyAgent(
     name="Executor",
-    system_message="Executor. You follow the plan. Execute the code written by the coder and return outcomes.",
+    system_message=(
+        "You are the Executor Agent. Your role is to execute the code provided by the Coder. "
+        "Run the code in a safe and controlled environment, capture any outputs or errors, and report back the results. "
+        "Ensure that the execution is secure and does not violate any policies. "
+        "Provide clear and detailed feedback on the execution outcome."
+    ),
     human_input_mode="NEVER",
     code_execution_config={"last_n_messages": 12, "work_dir": "./code_antibody/"},
     llm_config=llm_config,
 )
 
-'''
-Planner agent is responsible for developing a plan for antibody design.
-'''
+# Define the Planner Agent
 planner = AssistantAgent(
     name="Planner",
     system_message=(
-        "Planner. You develop a plan. Begin by explaining the plan. Revise the plan based on feedback from the critic and user_proxy, until user_proxy approval. "
-        "The plan may involve calling custom functions for retrieving knowledge, designing antibodies using 'generate_antibody_sequence_palm_h3', and computing and analyzing antibody properties. "
-        "Include the function names in the plan and the necessary parameters, such as 'antigen_sequence', 'heavy_chain_sequence', 'light_chain_sequence', 'cdrh3_begin', 'cdrh3_end', and any 'requirements'."
+        "You are the Planner Agent. Your role is to develop a detailed plan to achieve the user's objectives in antibody discovery. "
+        "Begin by understanding the user's input and requirements. "
+        "Outline the steps needed, including calling custom functions and coordinating with other agents. "
+        "Be flexible and iterative, revising the plan based on feedback from the Critic and UserProxyAgent. "
+        "Ensure the plan is clear, actionable, and aligned with the goals."
     ),
     llm_config=llm_config,
 )
 
 # Define the RetrieveUserProxyAgent (for RAG)
 ragproxyagent = RetrieveUserProxyAgent(
-    name="ragproxyagent",
-    system_message="Assistant with extra content retrieval power for antibody domain knowledge. The assistant follows the plan.",
+    name="RetrieveUserProxyAgent",
+    system_message=(
+        "You are the RetrieveUserProxyAgent with advanced content retrieval capabilities for antibody domain knowledge. "
+        "Your role is to provide relevant information from the knowledge base to assist other agents. "
+        "Follow the plan and respond to queries with precise and accurate information."
+    ),
     human_input_mode="NEVER",
     is_termination_msg=termination_msg,
     max_consecutive_auto_reply=10,
@@ -98,31 +117,28 @@ ragproxyagent = RetrieveUserProxyAgent(
     llm_config=llm_config,
 )
 
-# Define the AntibodyDesignAgent (Assistant Agent with function mapping)
+# Define the Assistant Agent (with function mapping)
 assistant = AssistantAgent(
-    name="assistant",
+    name="Assistant",
     system_message=(
-        "you are a helpful assistant. You have access to all the custom functions. "
-        "You focus on executing the functions suggested by the planner or the critic. "
-        "You also have the ability to prepare the required input parameters for the functions."
+        "You are the Assistant Agent with access to custom functions for antibody discovery. "
+        "Your role is to execute functions as suggested by the Planner or Critic, prepare the required input parameters, and process the results. "
+        "Collaborate effectively with other agents, share insights, and contribute to achieving the overall objectives."
     ),
     llm_config=llm_config,
     function_map={
         "retrieve_antigen_data": func.retrieve_antigen_data,
-        
-        ## might not work properly, need to match function definitions in agent_functions.py and correctly handle the required parameters and model loading
-        "generate_antibody_sequence_palm_h3": func.generate_antibody_sequence_palm_h3,  # Updated function
-        
+        "generate_antibody_sequence_palm_h3": func.generate_antibody_sequence_palm_h3,
         "optimize_antibody": func.optimize_antibody,
         "analyze_antibody_properties": func.analyze_antibody_properties,
-        # Add more function mappings as needed
     },
 )
 
 '''
-responsible for orchestrating the workflow between agents
+run method includes loops and conditional checks to allow for iterative refinement of 
+the plan and code, error handling, and more interactive communication between agents
 '''
-# Define the Coordinator to manage agent interactions
+# Coordinator class to manage agent interactions
 class Coordinator:
     def __init__(self, user_proxy, planner, coder, critic, executor, assistant, ragproxyagent):
         self.user_proxy = user_proxy
@@ -132,9 +148,7 @@ class Coordinator:
         self.executor = executor
         self.assistant = assistant
         self.ragproxyagent = ragproxyagent
-    
-    ## need to verify the chat methods of the agents correctly handle message passing
-    ## test the chat method for each agent individually to ensure it works as expected, add error handling if necessary
+
     def run(self):
         # Step 1: Get user input
         user_input = self.user_proxy.get_user_input()
@@ -142,22 +156,57 @@ class Coordinator:
         # Step 2: Planner creates a plan
         plan = self.planner.chat(user_input)
 
-        # Step 3: Critic reviews the plan
-        critique = self.critic.chat(plan)
+        # Loop until the plan is approved by the Critic
+        while True:
+            # Step 3: Critic reviews the plan
+            critique = self.critic.chat(plan)
 
-        # Step 4: User approves the plan
-        approval = self.user_proxy.chat(critique)
+            # Check if Critic approves the plan
+            if "TERMINATE" in critique.upper():
+                print("Plan approved by Critic.")
+                break
+            else:
+                # Critic provides feedback, Planner revises the plan
+                print("Critic feedback:")
+                print(critique)
+                plan = self.planner.chat(critique)
 
-        # Step 5: Coder generates code based on the plan
-        code = self.coder.chat(approval)
+        # Step 4: UserProxyAgent approves the plan
+        approval = self.user_proxy.chat(plan)
 
-        # Step 6: Executor executes the code
-        execution_result = self.executor.chat(code)
+        # Check if UserProxyAgent approves the plan
+        if "TERMINATE" not in approval.upper():
+            print("User did not approve the plan. Exiting.")
+            return
 
-        # Step 7: Assistant processes the execution result
-        assistant_result = self.assistant.chat(execution_result)
+        # Step 5: Assistant executes the plan
+        assistant_response = self.assistant.chat(plan)
 
-        # Step 8: Return the final result
+        # Step 6: Coder generates code if needed
+        if assistant_response and "CODE_NEEDED" in assistant_response.upper():
+            code = self.coder.chat(assistant_response)
+
+            # Step 7: Executor executes the code
+            execution_result = self.executor.chat(code)
+
+            # Loop to handle code execution errors
+            while True:
+                if "Error" in execution_result:
+                    # Executor reports an error, Coder fixes the code
+                    print("Execution error:")
+                    print(execution_result)
+                    code = self.coder.chat(execution_result)
+                    execution_result = self.executor.chat(code)
+                else:
+                    # Execution successful
+                    break
+
+            # Step 8: Assistant processes the execution result
+            assistant_result = self.assistant.chat(execution_result)
+        else:
+            assistant_result = assistant_response
+
+        # Step 9: Return the final result
         print("Antibody Design Output:")
         print(assistant_result)
 
