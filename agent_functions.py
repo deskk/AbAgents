@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 '''
 generative model for antibody design conditioned on antigen
 '''
-# Load the PALM-H3 model and tokenizer
+# Load the AA model and tokenizer
 def load_palm_h3_model(model_dir, antibody_tokenizer_dir, antigen_tokenizer_dir):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")

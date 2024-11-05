@@ -22,7 +22,7 @@ query_engine = index.as_query_engine(similarity_top_k=10)
 def termination_msg(x):
     return isinstance(x, dict) and "TERMINATE" == str(x.get("content", ""))[-9:].upper()
 
-# Define the UserProxyAgent
+# UserProxyAgent
 user_proxy = UserProxyAgent(
     name="UserProxyAgent",
     is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
@@ -40,7 +40,7 @@ user_proxy = UserProxyAgent(
 '''
 Emphasized understanding requirements, writing efficient code, and readiness to debug
 '''
-# Define the Coder Agent
+# Coder Agent
 coder = AssistantAgent(
     name="Coder",
     system_message=(
@@ -55,7 +55,7 @@ coder = AssistantAgent(
 Clarified the role in critically analyzing plans.
 Instructed to provide constructive feedback and indicate approval with 'TERMINATE'.
 '''
-# Define the Critic Agent
+# Critic Agent
 critic = AssistantAgent(
     name="Critic",
     system_message=(
@@ -67,7 +67,7 @@ critic = AssistantAgent(
     llm_config=llm_config,
 )
 
-# Define the Executor Agent
+# Executor Agent
 executor = UserProxyAgent(
     name="Executor",
     system_message=(
@@ -81,7 +81,7 @@ executor = UserProxyAgent(
     llm_config=llm_config,
 )
 
-# Define the Planner Agent
+# Planner Agent
 planner = AssistantAgent(
     name="Planner",
     system_message=(
@@ -94,7 +94,7 @@ planner = AssistantAgent(
     llm_config=llm_config,
 )
 
-# Define the RetrieveUserProxyAgent (for RAG)
+# RetrieveUserProxyAgent (for RAG)
 ragproxyagent = RetrieveUserProxyAgent(
     name="RetrieveUserProxyAgent",
     system_message=(
@@ -117,7 +117,7 @@ ragproxyagent = RetrieveUserProxyAgent(
     llm_config=llm_config,
 )
 
-# Define the Assistant Agent (with function mapping)
+# Assistant Agent (with function mapping)
 assistant = AssistantAgent(
     name="Assistant",
     system_message=(
