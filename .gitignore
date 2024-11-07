@@ -1,6 +1,9 @@
 /notes/
 /test_scripts/test_openai.py
-/generation_palmh3/trained_models/
+generation_palmh3/trained_models/Result_cov_adbab/
+generation_palmh3/trained_models/Result_covid_heavy/
+generation_palmh3/trained_models/Result_covid_light/
+generation_palmh3/trained_models/Result_seq2seq/
 /__pycache__/
 /.cache/
 /generation_palmh3/PALM/
