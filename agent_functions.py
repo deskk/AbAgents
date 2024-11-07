@@ -7,7 +7,6 @@ import os
 # from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 import openai
 from llm_config import llm_config
-# from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import subprocess
 import glob
 import pandas as pd
