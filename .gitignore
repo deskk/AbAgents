@@ -1,7 +1,6 @@
 /notes/
 /test_scripts/test_openai.py
 /generation_palmh3/trained_models/
-/generation_palmh3/PALM/
 /__pycache__/
 /.cache/
 /generation_palmh3/PALM/cache
