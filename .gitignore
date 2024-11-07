@@ -3,9 +3,10 @@
 /generation_palmh3/trained_models/
 /__pycache__/
 /.cache/
-generation_palmh3/PALM/
-# /generation_palmh3/PALM/cache
-# /generation_palmh3/PALM/RawData
-# /generation_palmh3/PALM/ProcessedData
-# /generation_palmh3/PALM/RawData
-# /generation_palmh3/PALM/Result_seq2seq_gen
+# generation_palmh3/PALM/
+/archived/
+/generation_palmh3/PALM/cache
+/generation_palmh3/PALM/RawData
+/generation_palmh3/PALM/ProcessedData
+/generation_palmh3/PALM/RawData
+/generation_palmh3/PALM/Result_seq2seq_gen
