@@ -1,3 +1,5 @@
 igfold
 py3Dmol
 seaborn
+torch
+torchvision

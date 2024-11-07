@@ -4,8 +4,11 @@ generation_palmh3/trained_models/Result_cov_adbab
 generation_palmh3/trained_models/Result_covid_heavy
 generation_palmh3/trained_models/Result_covid_light
 generation_palmh3/trained_models/Result_seq2seq
-__pycache__
-.cache
+__pycache__/
+.cache/
+generation_palmh3/PALM/cache
 generation_palmh3/PALM/RawData
 generation_palmh3/PALM/ProcessedData
 generation_palmh3/PALM/RawData
+generation_palmh3/PALM/Result_seq2seq_gen
+/home/desmond/abagents/archived/
