@@ -4,150 +4,157 @@
 import json
 import torch
 import os
-from llama_index import GPTSimpleVectorIndex, SimpleDirectoryReader
+# from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 import openai
 from llm_config import llm_config
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+# from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import subprocess
+import glob
+import pandas as pd
+import shutil
+import uuid
 
+# analyze.py
+from analyze import analyze_antibody_properties as analyze_antibody
+
+''' 
+Generate antibody sequence using PALM-H3 model.
+
+Requires 5 inputs:
+- antigen_sequence
+- origin_seq
+- origin_light
+- cdrh3_begin
+- cdrh3_end
+
+The function modifies the generation config file with the inputs,
+runs the generation script, and returns the result as a DataFrame.
 '''
-generative model for antibody design conditioned on antigen
-'''
-# Load the AA model and tokenizer
-def load_palm_h3_model(model_dir, antibody_tokenizer_dir, antigen_tokenizer_dir):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
+def generate_antibody_sequence_palm_h3(
+    antigen_sequence,
+    origin_seq, # original heavy chain
+    origin_light,
+    cdrh3_begin,
+    cdrh3_end
+):
+    print("Starting generate_antibody_sequence_palm_h3 function...")
+    print("Preparing to run the PALM-H3 generation script in the 'palmh3' conda environment.")
 
-    # Load tokenizers
-    antibody_tokenizer = AutoTokenizer.from_pretrained(antibody_tokenizer_dir)
-    antigen_tokenizer = AutoTokenizer.from_pretrained(antigen_tokenizer_dir)
+    import subprocess
+    import json
+    import os
+    import glob
+    import pandas as pd
+    import shutil
+    import uuid
 
-    # Load model
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_dir)
-    model.to(device)
+    # Paths
+    original_config_path = '/home/desmond/abagents/generation_palmh3/PALM/Code/config/common/seq2seq_generate.json'
+    generation_script_path = '/home/desmond/abagents/generation_palmh3/PALM/Code/generate_antibody.py'
+    palm_env_name = 'palmh3'  # conda env for palmh3
 
-    return model, antibody_tokenizer, antigen_tokenizer
+    # Create a unique temporary directory to avoid conflicts
+    temp_run_id = str(uuid.uuid4())
+    temp_dir = os.path.join('/tmp', f'palmh3_run_{temp_run_id}')
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_config_path = os.path.join(temp_dir, 'seq2seq_generate.json')
 
-def generate_antibody_sequence_palm_h3(antigen_sequence, heavy_chain_sequence, light_chain_sequence, cdrh3_begin, cdrh3_end):
-    # Load the model and tokenizers if not already loaded
-    if not hasattr(generate_antibody_sequence_palm_h3, 'model'):
-        base_dir = 'palm-model/Model_Zenodo'
-        model_dir = os.path.join(base_dir, 'PALM_seq2seq')
-        antibody_tokenizer_dir = os.path.join(base_dir, 'Heavy_roformer')
-        antigen_tokenizer_dir = os.path.join(base_dir, 'antigenmodel')
-        generate_antibody_sequence_palm_h3.model, generate_antibody_sequence_palm_h3.antibody_tokenizer, generate_antibody_sequence_palm_h3.antigen_tokenizer = load_palm_h3_model(
-            model_dir, antibody_tokenizer_dir, antigen_tokenizer_dir
+    # Copy the config file to the temporary directory
+    shutil.copyfile(original_config_path, temp_config_path)
+
+    # Read and modify the config file
+    with open(temp_config_path, 'r') as file:
+        config_data = json.load(file)
+
+    # Update the required fields
+    config_data['origin_seq'] = origin_seq
+    config_data['origin_light'] = origin_light
+    config_data['cdrh3_begin'] = cdrh3_begin
+    config_data['cdrh3_end'] = cdrh3_end
+    config_data['use_antigen'] = antigen_sequence
+
+    # Update the save directory to the temporary directory
+    config_data['trainer']['save_dir'] = temp_dir
+
+    # Write the modified config back to the temporary file
+    with open(temp_config_path, 'w') as file:
+        json.dump(config_data, file, indent=4)
+
+    # Run the generation script using subprocess and activate the palmh3 environment
+    command = [
+        'conda', 'run', '-n', palm_env_name,
+        'python', generation_script_path,
+        '--config', temp_config_path
+    ]
+
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True
         )
+        print("Generation script executed successfully.")
 
-    model = generate_antibody_sequence_palm_h3.model
-    antibody_tokenizer = generate_antibody_sequence_palm_h3.antibody_tokenizer
-    antigen_tokenizer = generate_antibody_sequence_palm_h3.antigen_tokenizer
-
-    device = next(model.parameters()).device
-
-    # Tokenize sequences
-    antigen_ids = antigen_tokenizer.encode(antigen_sequence, add_special_tokens=False)
-    heavy_ids = antibody_tokenizer.encode(heavy_chain_sequence, add_special_tokens=False)
-    light_ids = antibody_tokenizer.encode(light_chain_sequence, add_special_tokens=False)
-
-    # Convert CDR H3 indices to tensors
-    cdrh3_begin_tensor = torch.tensor([cdrh3_begin], device=device)
-    cdrh3_end_tensor = torch.tensor([cdrh3_end], device=device)
-
-    # Prepare input IDs and attention masks
-    inputs = {
-        'input_ids': torch.tensor([heavy_ids], device=device),
-        'attention_mask': torch.ones((1, len(heavy_ids)), device=device),
-        'decoder_input_ids': torch.tensor([light_ids], device=device),
-        'antigen_input_ids': torch.tensor([antigen_ids], device=device),
-        'cdr3_start': cdrh3_begin_tensor,
-        'cdr3_end': cdrh3_end_tensor,
-    }
-
-    # Generate the antibody sequence
-    outputs = model.generate(
-        **inputs,
-        max_length=512,
-        num_return_sequences=1,
-        do_sample=True,
-        top_k=50,
-        top_p=0.95,
-        temperature=1.0,
-    )
-
-    # Decode output
-    generated_sequence = antibody_tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-    return generated_sequence
+        # Locate the result file
+        result_files = glob.glob(os.path.join(temp_dir, '**', 'result.csv'), recursive=True)
+        if result_files:
+            latest_result_file = max(result_files, key=os.path.getctime)
+            df = pd.read_csv(latest_result_file)
+            # Return the DataFrame
+            return df
+        else:
+            print("No result files found.")
+            return None
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running the script: {e.stderr}")
+        return None
+    finally:
+        # Clean up the temporary directory
+        shutil.rmtree(temp_dir)
 
 
-# Load the indexed data using llama_index for RAG
-DATA_DIR =os.getenv('DATA_DIR', 'data/antibody_antigen_models')
-documents = SimpleDirectoryReader(DATA_DIR).load_data()
-index = GPTSimpleVectorIndex(documents)
-query_engine = index.as_query_engine(similarity_top_k=10)
+# # Load the indexed data using llama_index for RAG (if needed)
+# DATA_DIR = os.getenv('DATA_DIR', 'data/antibody_antigen_models')
+# documents = SimpleDirectoryReader(DATA_DIR).load_data()
+# index = VectorStoreIndex(documents)
+# query_engine = index.as_query_engine()
 
-# Function to retrieve antigen data using llama_index
-def retrieve_antigen_data(antigen_name):
-    print(f"Retrieving data for antigen: {antigen_name}")
-    response = query_engine.query(f"Information about antigen {antigen_name}")
-    antigen_info = response.response
-    return antigen_info
+# # Function to retrieve antigen data using llama_index
+# def retrieve_antigen_data(antigen_name):
+#     print(f"Retrieving data for antigen: {antigen_name}")
+#     response = query_engine.query(f"Information about antigen {antigen_name}")
+#     antigen_info = response.response
+#     return antigen_info
 
-'''
-to improve specific properties of an existing antibody seq
+# add error handling later
+def analyze_antibody_properties(heavy_chain, light_chain):
+    '''
+    Analyzes the properties of an antibody's heavy and light chain sequences.
+    '''
+    # Call the analysis function from analyze.py
+    result = analyze_antibody(heavy_chain, light_chain)
+    
+    # Process the result and format the analysis report
+    if result['aggregation_propensity'] is not None:
+        analysis_report = (
+            f"Predicted structure saved as: {result['output_pdb']}\n"
+            f"Visualization saved as: {result['visualization_html']}\n"
+            f"Average Aggregation Propensity: {result['aggregation_propensity']}"
+        )
+    else:
+        analysis_report = "Failed to calculate aggregation propensity."
+    
+    return analysis_report
 
-(tentative) optimization scheme:
-- * Binding affinity: Enhancing the binding strength between the antibody and its antigen
-
-- Solubility: Improving the solubility of the antibody
-- Aggregation propensity: Reducing the tendency to form aggregates
-- Humanization: Minimizing non-human sequences
-
-?? - Stability: Improving the structural integrity under physiological conditions
-?? - Specificity: Reducing off-target interactions
-?? - Immunogenicity: Minimizing the potential to elicit an unwanted immune response
-?? - Developability: Enhancing manufacturability and pharmacokinetic properties
-'''
-# Function to optimize an antibody sequence
+# Function to optimize an antibody sequence (placeholder for future implementation)
 def optimize_antibody(antibody_sequence, optimization_goals=''):
-    prompt = (
-        f"Optimize the following antibody sequence:\n{antibody_sequence}\n\n"
-        f"Optimization Goals:\n{optimization_goals}\n"
-        f"Provide the optimized antibody sequence and explain the modifications."
-    )
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are an expert in antibody optimization."},
-            {"role": "user", "content": prompt}
-        ],
-        **llm_config['openai_params']
-    )
-    optimized_antibody = response['choices'][0]['message']['content']
-    return optimized_antibody
+    # Placeholder implementation
+    return "Optimized antibody sequence (functionality to be implemented)"
 
 '''
-evaluates antibody seq to predict its biophysical and biochemical properties:
-# - binding affinity, solubiility, aggregation propensity, humanization
-
-?? - Efficacy: Potential effectiveness in neutralizing the target antigen.
-?? - Stability: Thermal and chemical stability predictions.
-?? - Immunogenicity: Likelihood of triggering an immune response.
-?? - Aggregation Propensity: Tendency to form aggregates, which is undesirable.
+next steps including:
+- temporary directory cleanup
+- rag
+- optimization
 '''
-# Function to analyze antibody properties
-def analyze_antibody_properties(antibody_sequence):
-    prompt = (
-        f"Analyze the following antibody sequence:\n{antibody_sequence}\n\n"
-        f"Provide a detailed analysis of its properties, including binding affinity, solubility, aggregation propensity, and humanization."
-    )
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are an expert in antibody analysis."},
-            {"role": "user", "content": prompt}
-        ],
-        **llm_config['openai_params']
-    )
-    analysis = response['choices'][0]['message']['content']
-    return analysis

@@ -50,3 +50,28 @@ agents.py: Orchestrates the workflow between various agents
 agent_functions.py: Contains custom functions that the assistant agent can execute
 llm_config.py: Configures the language models and their parameters
 abgen.py: Script for generating antibody sequences using the PALM-H3 model
+
+----------------------------------------------------
+Step-by-Step in run Method
+User Provides the Initial Input
+
+The user (through the UserProxyAgent) provides the initial objectives, which may include the antigen sequence and other relevant information.
+Planner Creates the Plan
+
+The Planner should, in the plan, specify that the Assistant should call generate_antibody_sequence_palm_h3 with the necessary parameters.
+
+Example Plan:
+
+sql
+Copy code
+1. Collect the following inputs from the user: antigen_sequence, origin_seq, origin_light, cdrh3_begin, cdrh3_end.
+2. Use the 'generate_antibody_sequence_palm_h3' function with these inputs to generate antibody sequences.
+3. Analyze the generated sequences (optional).
+Assistant Executes the Plan
+
+The Assistant reads the plan, collects the necessary inputs, and calls the function.
+Collecting Inputs
+
+Since the Assistant needs the inputs, it may need to request them from the UserProxyAgent.
+
+Modify the Assistant's Logic to request inputs if not provided.
