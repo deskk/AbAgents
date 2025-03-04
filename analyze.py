@@ -87,21 +87,13 @@ def predict_aggregation_propensity(pdb_file_path):
         print(f"Error retrieving results: {response.status_code}")
         return None
 
-def analyze_antibody_properties(heavy_chain, light_chain):
-    # Create 'analysis_output' directory if it doesn't exist
+def analyze_heavy_light(heavy_chain, light_chain):
     output_dir = 'analysis_output'
     os.makedirs(output_dir, exist_ok=True)
+    output_pdb = os.path.join(output_dir, 'analysis_output/predicted_antibody.pdb')
 
-    # Set output paths
-    output_pdb = os.path.join(output_dir, 'predicted_antibody.pdb')
-
-    # Predict antibody structure
     predict_antibody_structure({'H': heavy_chain, 'L': light_chain}, output_pdb, visualize=True)
-
-    # Calculate aggregation propensity
     agg_propensity = predict_aggregation_propensity(output_pdb)
-
-    # Paths to output files
     visualization_html = os.path.splitext(output_pdb)[0] + '_visualization.html'
 
     result = {
@@ -111,42 +103,36 @@ def analyze_antibody_properties(heavy_chain, light_chain):
     }
     return result
 
-# def process_antibody(input_file):
+def process_antibody(input_file):
 
-#     '''This is the master function which is called when the this python script "final analyze.py" is executed.
-#        It takes in input as a csv file with Antibody heavy and light chain as inputs calls other function to analyze antibody properties.'''
+    '''This is the master function which is called when the this python script "final analyze.py" is executed.
+       It takes in input as a csv file with Antibody heavy and light chain as inputs calls other function to analyze antibody properties.'''
 
-#     # Read input file
-#     df = pd.read_csv(input_file)
+    df = pd.read_csv(input_file)
     
-#     # Extract sequences
-#     heavy_chain = df['Heavy Chain'].iloc[0]
-#     light_chain = df['Light Chain'].iloc[0]
+    heavy_chain = df['Heavy Chain'].iloc[0]
+    light_chain = df['Light Chain'].iloc[0]
     
-#     # Prepare sequences for structure prediction
-#     sequences = {
-#         "H": heavy_chain,
-#         "L": light_chain
-#     }
+    sequences = {
+        "H": heavy_chain,
+        "L": light_chain
+    }
     
-#     # Predict antibody structure
-#     output_pdb = 'predicted_antibody.pdb'
-#     predict_antibody_structure(sequences, output_pdb, visualize=True)
+    output_pdb = 'analysis_output/predicted_antibody.pdb'
+    predict_antibody_structure(sequences, output_pdb, visualize=True)
     
-#     # Calculate aggregation propensity
-#     agg_propensity = predict_aggregation_propensity(output_pdb)
+    agg_propensity = predict_aggregation_propensity(output_pdb)
     
-#     if agg_propensity is not None:
-#         print(f"Average Aggregation Propensity: {agg_propensity}")
-#     else:
-#         print("Failed to calculate aggregation propensity.")
+    if agg_propensity is not None:
+        print(f"Average Aggregation Propensity: {agg_propensity}")
+    else:
+        print("Failed to calculate aggregation propensity.")
 
-#     return output_pdb, agg_propensity
+    return output_pdb, agg_propensity
 
-# # Main execution
-# input_file = 'dummy_files/antibody_sequences.csv'
-# output_pdb, agg_propensity = process_antibody(input_file)
-
-# print(f"Predicted structure saved as: {output_pdb}")
-# print(f"Visualization saved as: visualization.html")
-# print(f"Aggregation Propensity: {agg_propensity}")
+if __name__ == "__main__":
+    input_file = 'dummy_files/antibody_sequences.csv'
+    output_pdb, agg_propensity = process_antibody(input_file)
+    print(f"Predicted structure saved as: {output_pdb}")
+    print(f"Visualization saved as: visualization.html")
+    print(f"Aggregation Propensity: {agg_propensity}")

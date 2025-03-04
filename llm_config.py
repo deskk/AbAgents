@@ -1,4 +1,4 @@
-# llm_config.py
+
 import os
 import openai
 
@@ -8,78 +8,78 @@ if not openai_api_key:
 
 openai.api_key = openai_api_key
 
-# LLM configurations
-llm_config = {
-    "functions": [
-        {
-            "name": "generate_antibody_sequence_palm_h3",
-            "description": "Generates antibody sequences using the PALM-H3 model.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "antigen_sequence": {
-                        "type": "string",
-                        "description": "The antigen sequence."
-                    },
-                    "origin_seq": {
-                        "type": "string",
-                        "description": "The origin heavy chain sequence."
-                    },
-                    "origin_light": {
-                        "type": "string",
-                        "description": "The origin light chain sequence."
-                    },
-                    "cdrh3_begin": {
-                        "type": "integer",
-                        "description": "CDR H3 begin index."
-                    },
-                    "cdrh3_end": {
-                        "type": "integer",
-                        "description": "CDR H3 end index."
-                    }
-                },
-                "required": ["antigen_sequence", "origin_seq", "origin_light", "cdrh3_begin", "cdrh3_end"]
-            }
-        },        
-        {
-            "name": "analyze_antibody_properties",
-            "description": "Analyzes the properties of an antibody sequence.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "antibody_sequence": {
-                        "type": "string",
-                        "description": "The antibody sequence to analyze."
-                    }
-                },
-                "required": ["antibody_sequence"]
-            }
-        },
-        # {
-        #     "name": "optimize_antibody",
-        #     "description": "Optimizes an antibody sequence for desired properties.",
-        #     "parameters": {
-        #         "type": "object",
-        #         "properties": {
-        #             "antibody_sequence": {
-        #                 "type": "string",
-        #                 "description": "The antibody sequence to optimize."
-        #             },
-        #             "optimization_goals": {
-        #                 "type": "string",
-        #                 "description": "Goals for optimization, such as increased stability or reduced immunogenicity."
-        #             }
-        #         },
-        #         "required": ["antibody_sequence"]
-        #     }
-        # },
-    ],
-
-    "temperature": 0.7,
+common_llm_config = {
+    "temperature": 0.8,
     "max_tokens": 1500,
     "n": 1,
     "stop": None,
     "config_list": [
-        {"model": "gpt-4o-mini", "api_key": openai_api_key},
+        {"model": "gpt-4o", "api_key": openai_api_key},
     ],
+}
+
+immunologist_llm_config = {
+    **common_llm_config,
+    # "functions": [
+    #     {
+    #         "name": "generate_ab",
+    #         "description": "Generates antibody sequences using the PALM-H3 model.",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "antigen_sequence": {"type": "string", "description": "The antigen sequence."},
+    #                 "origin_seq": {"type": "string", "description": "The origin heavy chain sequence."},
+    #                 "origin_light": {"type": "string", "description": "The origin light chain sequence."},
+    #                 "cdrh3_begin": {"type": "integer", "description": "CDR H3 begin index."},
+    #                 "cdrh3_end": {"type": "integer", "description": "CDR H3 end index."}
+    #             },
+    #             "required": ["antigen_sequence", "origin_seq", "origin_light", "cdrh3_begin", "cdrh3_end"]
+    #         }
+    #     },
+    # ],
+    # "function_call": "auto",
+}
+
+project_lead_critic_llm_config = {
+    **common_llm_config,
+}
+
+# machine_learning_engineer_llm_config = {
+#     **common_llm_config,
+# }
+
+machine_learning_engineer_llm_config = {
+    **common_llm_config,
+    "functions": [
+        {
+            "name": "generate_ab",
+            "description": "Generates antibody sequences…",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "antigen_sequence": {"type": "string"},
+                    "origin_seq": {"type": "string"},
+                    "origin_light": {"type": "string"},
+                    "cdrh3_begin": {"type": "integer"},
+                    "cdrh3_end": {"type": "integer"}
+                },
+                "required": ["antigen_sequence","origin_seq","origin_light","cdrh3_begin","cdrh3_end"]
+            }
+        },
+        {
+            "name": "analyze_ab",
+            "description": "Takes a CSV path and runs the antibody analysis script.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "result_csv_path": {
+                        "type": "string",
+                        "description": "Path to the CSV file containing the newly generated antibodies."
+                    }
+                },
+                "required": ["result_csv_path"]
+            }
+        },
+    ],
+    "function_call": "auto",
 }

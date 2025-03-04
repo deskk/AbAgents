@@ -75,3 +75,11 @@ Collecting Inputs
 Since the Assistant needs the inputs, it may need to request them from the UserProxyAgent.
 
 Modify the Assistant's Logic to request inputs if not provided.
+
+
+-------------
+Nov 17th:
+The UserProxyAgent initiates a conversation with the Planner.
+The Planner creates a plan and sends it to the Assistant.
+The Assistant executes the plan, calling any necessary functions.
+The Assistant then reports back the results.
