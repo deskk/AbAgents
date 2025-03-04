@@ -1,9 +1,0 @@
-###############################################
-nov 21st
-
-sudo docker build -t abagents .
-
-sudo sudo docker run -it --rm --gpus all --env OPENAI_API_KEY=xxxx abagents
-
-###################################################
-dec 5th
